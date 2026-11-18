@@ -28,7 +28,7 @@ function App() {
           setError(null)
         }
       } catch {
-        if (!cancelled) setError('Gagal mengambil data dari server')
+        if (!cancelled) setError('Gagal terhubung ke server')
       }
     }
 
@@ -40,37 +40,56 @@ function App() {
     }
   }, [])
 
+  const isLive = reading ? Date.now() - new Date(reading.receivedAt).getTime() < 15000 : false
+  const statusClass = error ? 'err' : reading && isLive ? 'ok' : 'wait'
+  const statusText = error
+    ? error
+    : reading
+      ? isLive
+        ? 'Terhubung · data diterima'
+        : 'Data terakhir diterima (menunggu pembaruan)'
+      : 'Menunggu data dari sensor...'
+
   return (
     <main className="page">
-      <h1>Monitoring Suhu &amp; Kelembapan</h1>
+      <header className="header">
+        <h1>Monitoring Suhu &amp; Kelembapan</h1>
+        <p className="subtitle">ESP8266 · Sensor DHT22 · Realtime Dashboard</p>
+      </header>
 
-      {error && <p className="status error">{error}</p>}
-
-      {reading ? (
-        <>
-          <div className="cards">
-            <div className="card">
-              <p className="label">Suhu</p>
-              <p className="value">
-                {reading.temperature.toFixed(1)} <span>°C</span>
-              </p>
-            </div>
-            <div className="card">
-              <p className="label">Kelembapan</p>
-              <p className="value">
-                {reading.humidity.toFixed(1)} <span>%</span>
-              </p>
-            </div>
-          </div>
-          <p className="status">
-            Terakhir update: {new Date(reading.receivedAt).toLocaleString()}
+      <section className="cards">
+        <article className="card temp">
+          <p className="card-label">Suhu</p>
+          <p className="card-value">
+            {reading ? reading.temperature.toFixed(1) : '--'}
+            <span className="unit">°C</span>
           </p>
-        </>
-      ) : (
-        !error && <p className="status">Menunggu data sensor...</p>
-      )}
+          <p className="card-desc">Temperatur udara saat ini</p>
+        </article>
+
+        <article className="card hum">
+          <p className="card-label">Kelembapan</p>
+          <p className="card-value">
+            {reading ? reading.humidity.toFixed(1) : '--'}
+            <span className="unit">%</span>
+          </p>
+          <p className="card-desc">Kelembapan relatif (RH)</p>
+        </article>
+      </section>
+
+      <div className="status-bar">
+        <span className={`dot ${statusClass}`} />
+        <span>{statusText}</span>
+      </div>
+
+      <p className="footer">
+        {reading
+          ? `Pembaruan terakhir: ${new Date(reading.receivedAt).toLocaleString('id-ID')}`
+          : 'Endpoint: POST /api/sensor · GET /api/readings/latest'}
+      </p>
     </main>
   )
 }
 
 export default App
+
