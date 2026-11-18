@@ -8,11 +8,7 @@ let latest: Reading | null = null;
 const app = express();
 app.use(express.json());
 
-app.get("/api/readings/latest", (_req, res) => {
-  res.json(latest);
-});
-
-app.post("/api/readings", (req, res) => {
+function saveReading(req: express.Request, res: express.Response) {
   const { temperature, humidity } = req.body ?? {};
   if (!Number.isFinite(temperature) || !Number.isFinite(humidity)) {
     res.status(400).json({ error: "temperature and humidity must be numbers" });
@@ -24,7 +20,13 @@ app.post("/api/readings", (req, res) => {
     receivedAt: new Date().toISOString(),
   };
   res.status(201).json(latest);
+}
+
+app.get("/api/readings/latest", (_req, res) => {
+  res.json(latest);
 });
+
+app.post(["/api/readings", "/api/sensor"], saveReading);
 
 if (import.meta.main) {
   const port = Number(Deno.env.get("PORT") ?? "8000");
