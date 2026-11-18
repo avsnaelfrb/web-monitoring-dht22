@@ -6,9 +6,9 @@ Panduan singkat agar pengerjaan konsisten.
 - **Package manager/runtime:** Deno
 - **Backend:** Express (npm via Deno) di `server/`
 - **Frontend:** React + Vite + TypeScript di `client/`
-- **Device (referensi):** ESP8266 + DHT22, lihat `~/Sandbox/EXP-arduino/tugas2-praktikum/tugas2-praktikum.ino`
-  - Sketch itu contoh tugas Blynk (referensi saja, **tidak diubah** di repo ini).
-  - Tugas dashboard ini: device/firmware terpisah akan mengirim data ke backend web ini.
+- **Device:**
+  - Referensi Blynk: `~/Sandbox/EXP-arduino/tugas2-praktikum/tugas2-praktikum.ino` (tidak diubah, di luar repo).
+  - Firmware dashboard lokal: `~/Sandbox/EXP-arduino/tugas2-local-api/tugas2-local-api.ino` — `POST` JSON ke `http://<IP_LAPTOP>:8000/api/sensor` (satu LAN). Ganti `<IP_LAPTOP>` dengan IP komputer yang menjalankan server.
 
 ## Struktur
 - `server/` — API HTTP (Express). Menerima data sensor & melayani data terbaru ke frontend.
@@ -28,12 +28,12 @@ Bentuk data sensor:
 { "temperature": 30.5, "humidity": 70.2, "receivedAt": "2026-11-18T12:00:00.000Z" }
 ```
 
-- `POST /api/readings`
+- `POST /api/sensor` (dipakai firmware `tugas2-local-api.ino`) — juga menerima `POST /api/readings`
   - Body: `{ "temperature": number, "humidity": number }` (dari device).
-  - Server validasi angka finite, set `receivedAt` (ISO), simpan sebagai bacaan terbaru, balas 200/201.
+  - Server validasi angka finite, set `receivedAt` (ISO), simpan sebagai bacaan terbaru, balas 201.
   - **Seam DB (scope berikutnya):** tambahkan penyimpanan/INSERT di titik penerimaan data ini tanpa ubah kontrak request/response.
 - `GET /api/readings/latest`
-  - Balas bacaan terbaru, atau `null`/kosong bila belum ada data.
+  - Balas bacaan terbaru, atau `null` bila belum ada data.
   - Frontend mem-poll endpoint ini.
 
 ## Penyimpanan saat ini
@@ -42,4 +42,4 @@ Bentuk data sensor:
 ## Konvensi
 - Jaga solusi sesederhana mungkin: perubahan minimal, tanpa dependency/abstraksi tambahan yang tidak diminta.
 - Jangan ubah kontrak API di atas tanpa alasan kuat (agar integrasi device & penambahan DB tetap lurus).
-- Firmware Blynk di luar repo hanya referensi; integrasi device ke dashboard ini lewat `POST /api/readings`.
+- Firmware Blynk di luar repo hanya referensi; integrasi device ke dashboard ini lewat `POST /api/sensor` (atau `/api/readings`).
